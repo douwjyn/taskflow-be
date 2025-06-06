@@ -46,6 +46,8 @@ Route::get('/tasks/{user}', [App\Http\Controllers\TaskController::class, 'index'
     ->name('task.index');
 Route::post('/task-update/{task}', [App\Http\Controllers\TaskController::class, 'update'])
     ->name('task.update');
+Route::get('/tasks', [App\Http\Controllers\TaskController::class, 'all']);
+
 
 // Upload routes
 Route::post('/upload', [App\Http\Controllers\UploadController::class, 'store'])

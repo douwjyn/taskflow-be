@@ -65,12 +65,10 @@ class TaskController extends Controller
         return response()->json(['message' => 'Task assigned successfully.'], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Task $task)
+    public function all(Task $task)
     {
-        //
+        return response()->json(['tasks' => $task->get()]);
+
     }
 
     /**
@@ -96,6 +94,7 @@ class TaskController extends Controller
 
         $task->update([
             'status' => 'Completed',
+            'due_date' => null
         ]);
 
 

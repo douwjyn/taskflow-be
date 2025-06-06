@@ -37,16 +37,43 @@ class UploadController extends Controller
             'task_id' => 'required|exists:tasks,id',
             'user_id' => 'required|exists:users,id',
             'team_id' => 'required|exists:teams,id',
-            'submission' => 'required|file|mimes:ppt,pptx,xls,xlsx,pdf,doc,docx|max:2048',
+
+            'submission_file' => 'nullable|file|mimes:ppt,pptx,xls,xlsx,pdf,doc,docx|max:2048',
+            'submission_link' => [
+                'nullable',
+                'url',
+                'regex:/^https?:\/\/(docs\.google\.com)\/.+$/'
+            ],
+        ], [
+            'submission_link.regex' => 'The submission link must be a valid Google Docs URL.',
         ]);
 
         $task = Task::findOrFail($request->input('task_id'));
         $team = Team::findOrFail($task->team_id);
-        $task->update([
-            'submission' => $request->file('submission')->store('uploads', 'public'),
-            'submitted_date' => Carbon::now(),
-            // 'status' => 'Completed',
-        ]);
+
+        if (!$request->hasFile('submission_file') && !$request->filled('submission_link')) {
+            return response()->json([
+                'message' => 'Please upload either a file or a Google Docs Link.',
+                'response' => 'error'
+            ], 500);
+            // return back()->withErrors(['submission' => 'You must provide either a file or a Google Docs link.'])->withInput();
+        }
+
+        if ($request->hasFile('submission_file')) {
+             $task->update([
+                'submission' => $request->file('submission_file')->store('uploads', 'public'),
+                'submitted_date' => Carbon::now(),
+                // 'status' => 'Completed',
+            ]);
+        } else if ($request->has('submission_link')) {
+            $task->update([
+                'submission' => $request->input('submission_link'),
+                'submitted_date' => Carbon::now(),
+                // 'status' => 'Completed',
+            ]);
+        }
+
+      
         $user = User::findOrFail($request->input('user_id'));
         // activity()
         //     ->performedOn($team)
@@ -118,7 +145,7 @@ class UploadController extends Controller
         $file = $task->submission;
         if ($file && Storage::disk('public')->exists($file)) {
         Storage::disk('public')->delete($file);
-        }
+        }   
 
         $task->update([
             'submission' => null,

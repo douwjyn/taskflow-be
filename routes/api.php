@@ -52,7 +52,8 @@ Route::get('/uploads', [App\Http\Controllers\UploadController::class, 'index'])
     ->name('upload.index');
 Route::get('/download/{task}', [App\Http\Controllers\UploadController::class, 'download'])
     ->name('upload.download');
-
+Route::delete('/upload/{task}', [App\Http\Controllers\UploadController::class, 'destroy'])
+    ->name('upload.destroy');
 
 Route::get('user-team-activities/{user}', function (\App\Models\User $user) {
     // Get all team IDs where user is leader or member

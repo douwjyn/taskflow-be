@@ -48,19 +48,19 @@ class TeamController extends Controller
             'role' => $request->input('role', 'member'), 
         ]);
 
-        activity()
-            ->performedOn($team)
-            ->causedBy($user)
-            ->withProperties(['role' => $request->input('role', 'member')])
-            ->log("User {$user->name} joined the team {$team->name} as {$request->input('role', 'member')}.");
+        // activity()
+        //     ->performedOn($team)
+        //     ->causedBy($user)
+        //     ->withProperties(['role' => $request->input('role', 'member')])
+        //     ->log("User {$user->name} joined the team {$team->name} as {$request->input('role', 'member')}.");
 
         return response()->json([
             'message' => 'User joined the team successfully.',
             'team' => $team->load('members'),
-            'activity' => Activity::where('subject_type', Team::class)
-                ->where('subject_id', $team->id)
-                ->latest()
-                ->get(),
+            // 'activity' => Activity::where('subject_type', Team::class)
+            //     ->where('subject_id', $team->id)
+            //     ->latest()
+            //     ->get(),
         ], 200);
 
     }

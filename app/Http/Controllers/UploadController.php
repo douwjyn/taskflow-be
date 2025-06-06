@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Upload;
 use Illuminate\Http\Request;
 use App\Models\Task;
+use App\Models\Team;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
@@ -33,15 +35,30 @@ class UploadController extends Controller
     {
         $request->validate([
             'task_id' => 'required|exists:tasks,id',
+            'user_id' => 'required|exists:users,id',
+            'team_id' => 'required|exists:teams,id',
             'submission' => 'required|file|mimes:ppt,pptx,xls,xlsx,pdf,doc,docx|max:2048',
         ]);
 
         $task = Task::findOrFail($request->input('task_id'));
+        $team = Team::findOrFail($task->team_id);
         $task->update([
             'submission' => $request->file('submission')->store('uploads', 'public'),
             'submitted_date' => Carbon::now(),
             // 'status' => 'Completed',
         ]);
+        $user = User::findOrFail($request->input('user_id'));
+        // activity()
+        //     ->performedOn($team)
+        //     ->causedBy($user)
+        //     ->withProperties(['subject_id' => $task->id])
+        //     ->log($user->name . ' uploaded a file');
+
+        activity()
+            ->performedOn($team)
+            ->causedBy($user)
+            ->withProperties(['role' => $request->input('role', 'member')])
+            ->log($user->name . " uploaded a file");
 
         // $upload->user_id = $request->user()->id;
         // $upload->task_id = $request->input('task_id');
@@ -50,7 +67,11 @@ class UploadController extends Controller
         // $upload->slug = str_slug($request->file('file')->getClientOriginalName(), '-');
         // $upload->save();
 
-        return response()->json(['message' => 'File uploaded successfully.', 'task' => $task], 201);
+        return response()->json([
+            'message' => 'File uploaded successfully.',
+            'task' => $task,
+            'response' => 'success'
+        ], 201);
     }
 
     /**
@@ -92,8 +113,19 @@ class UploadController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Upload $upload)
+    public function destroy(Task $task)
     {
-        //
+        $file = $task->submission;
+        if ($file && Storage::disk('public')->exists($file)) {
+        Storage::disk('public')->delete($file);
+        }
+
+        $task->update([
+            'submission' => null,
+            'submitted_date' => null,
+            // 'status' => 'Pending',
+        ]);
+
+        return response()->json(['message' => 'File deleted successfully.', 'task' => $task], 200);
     }
 }

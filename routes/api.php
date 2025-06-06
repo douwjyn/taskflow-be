@@ -2,10 +2,12 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-    return $request->user();
+use App\Models\User;
+// Originally has middleware('auth:sanctum')
+Route::get('/user/{user}', function (Request $request, User $user) {
+    return $user;
 });
+
 // Auth routes
 Route::post('/register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'store'])
     ->name('register');
@@ -54,6 +56,10 @@ Route::get('/download/{task}', [App\Http\Controllers\UploadController::class, 'd
     ->name('upload.download');
 Route::delete('/upload/{task}', [App\Http\Controllers\UploadController::class, 'destroy'])
     ->name('upload.destroy');
+
+// Settings routes
+Route::post('settings/{user}', [App\Http\Controllers\SettingsController::class, 'index'])
+    ->name('settings');
 
 Route::get('user-team-activities/{user}', function (\App\Models\User $user) {
     // Get all team IDs where user is leader or member

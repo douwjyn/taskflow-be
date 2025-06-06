@@ -22,7 +22,8 @@ class TeamController extends Controller
                 $query->where('users.id', $user->id);
             })
             ->get();
-
+        
+        
 
         return response()->json(['teams' => $teams], 200);
     }

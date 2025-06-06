@@ -62,7 +62,7 @@ class TaskController extends Controller
         // Assign the user to the task
         $task->users()->attach($request->user_id);
 
-        return response()->json(['message' => 'Task assigned successfully.'], 201);
+        return response()->json(['message' => 'Task assigned successfully.', 'team_id' => $task->team_id, 'team_name' => $task->team->name], 201);
     }
 
     public function all(Task $task)

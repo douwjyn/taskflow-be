@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\User;
+use App\Models\Team;
+use App\Models\RecentUpdate;
 // Originally has middleware('auth:sanctum')
 Route::get('/user/{user}', function (Request $request, User $user) {
     return $user;
@@ -31,6 +33,38 @@ Route::post('/team-join', [App\Http\Controllers\TeamController::class, 'join_tea
 Route::get('/all-teams', [App\Http\Controllers\TeamController::class, 'all_teams'])
     ->name('team.all');
 
+Route::get('/update-progress/{team}', function(Team $team) {
+    // Get the completed task of the team
+    // $_team = $team->with('tasks');
+    $totalTasks = $team->tasks->count();
+    $completedTasks = $team->tasks->where('status', 'Completed')->count();
+    
+    $progress = $totalTasks > 0 ? ($completedTasks / $totalTasks) * 100 : 0;
+    $team->progress = $progress;
+    $team->save();
+
+    $recentUpdate = RecentUpdate::updateOrCreate(
+        ['team_id' => $team->id], // match on team_id
+        [
+            'team_name' => $team->name,
+            'chapter' => 'Overall Progress',
+            'progress' => $progress,
+            'completed_tasks' => $completedTasks,
+            'total_tasks' => $totalTasks,
+        ]
+    );
+
+    return response()->json($recentUpdate);
+
+});
+
+Route::get('/recent-updates', function() {
+    $updates = RecentUpdate::orderBy('updated_at', 'desc')->take(9)->get();
+
+    return response()->json($updates);
+});
+
+// Activity routes
 Route::get('user-activities/{user}', function ($user) {
     $activities = Spatie\Activitylog\Models\Activity::with(['causer', 'subject'])
         ->where('causer_id', $user->id)

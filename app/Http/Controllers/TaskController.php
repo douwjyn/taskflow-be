@@ -14,7 +14,7 @@ class TaskController extends Controller
      */
     public function index(User $user)
     {
-        $teams = Team::with(['leader', 'members', 'tasks'])
+        $teams = Team::with(['leader', 'members', 'tasks.users'])
             ->where('leader_id', $user->id)
             ->orWhereHas('members', function ($query) use ($user) {
                 $query->where('users.id', $user->id);
@@ -26,7 +26,10 @@ class TaskController extends Controller
         });
 
 
-        return response()->json(['tasks' => $tasks], 200);
+        return response()->json([
+            'tasks' => $tasks,
+            'teams' => $teams
+        ], 200);
     }
 
     /**
@@ -83,7 +86,20 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
-        //
+        
+        if ($task->status == 'Completed') {
+            $task->update([
+                'status' => 'Pending'
+            ]);
+            return response()->json(['message' => 'Task status updated to Incomplete.'], 200);
+        }
+
+        $task->update([
+            'status' => 'Completed',
+        ]);
+
+
+        return response()->json(['message' => 'Task updated successfully.'], 200);
     }
 
     /**

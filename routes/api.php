@@ -33,6 +33,8 @@ Route::post('/team-join', [App\Http\Controllers\TeamController::class, 'join_tea
 Route::get('/all-teams', [App\Http\Controllers\TeamController::class, 'all_teams'])
     ->name('team.all');
 
+Route::post('/add-member/{team}', [App\Http\Controllers\TeamController::class, 'add_member']);
+
 Route::get('/update-progress/{team}', function(Team $team) {
     // Get the completed task of the team
     // $_team = $team->with('tasks');

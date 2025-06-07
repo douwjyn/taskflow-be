@@ -103,12 +103,33 @@ class TeamController extends Controller
         return response()->json(['team' => $team], 200);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Team $team)
+    public function add_member(Team $team, Request $request)
     {
-        //
+        $request->validate([
+            'member_name' => 'required|exists:users,name'
+        ]);
+
+        $user = User::where('name', $request->input('member_name'))->first();
+        
+        $team->members()->attach($user->id, [
+            'role' => $request->input('role', 'member'), 
+        ]);
+
+        \App\Models\Notification::create([
+            "type" => "invite",
+            "team_id" => $team->id,
+            "message" => $user->name . " has been invited to the team " . $team->name ,
+        ]);
+
+        return response()->json([
+            'message' => $user->name . ' has been added to team ' . $team->name . ' successfully.',
+            'team' => $team->load(['leader', 'members.tasks']),
+            // 'activity' => Activity::where('subject_type', Team::class)
+            //     ->where('subject_id', $team->id)
+            //     ->latest()
+            //     ->get(),
+        ], 200);
+
     }
 
     /**

@@ -81,6 +81,8 @@ Route::get('/tasks/{user}', [App\Http\Controllers\TaskController::class, 'index'
 Route::post('/task-update/{task}', [App\Http\Controllers\TaskController::class, 'update'])
     ->name('task.update');
 Route::get('/tasks', [App\Http\Controllers\TaskController::class, 'all']);
+Route::get('/tasks-delete/all', [App\Http\Controllers\TaskController::class, 'delete_all']);
+
 
 
 // Upload routes
@@ -114,3 +116,27 @@ Route::get('user-team-activities/{user}', function (\App\Models\User $user) {
 
     return response()->json(['activities' => $activities], 200);
 })->name('user.team.activities');
+
+
+// Notification routes 
+Route::get('/user-notifications/{user}', function(\App\Models\User $user) {
+    $memberTeamIds = $user->teams()->pluck('teams.id');
+
+    $leaderTeamIds = Team::where('leader_id', $user->id)->pluck('id');
+
+    // Merge and get unique team_ids
+    $allTeamIds = $memberTeamIds->merge($leaderTeamIds)->unique();
+
+    // Get notifications from those teams
+    $notifications = \App\Models\Notification::whereIn('team_id', $allTeamIds)
+        ->latest()
+        ->get();
+
+    return response()->json($notifications);
+});
+
+Route::get('/delete-notification/{notification}', function(\App\Models\Notification $notification) {
+    $notification->delete();
+
+    return response()->json(['message' => 'Notification deleted']);
+});

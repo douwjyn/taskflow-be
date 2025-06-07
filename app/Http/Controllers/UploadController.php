@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Task;
 use App\Models\Team;
 use App\Models\User;
+use App\Models\Notification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
@@ -50,7 +51,7 @@ class UploadController extends Controller
 
         $task = Task::findOrFail($request->input('task_id'));
         $team = Team::findOrFail($task->team_id);
-
+        $type = '';
         if (!$request->hasFile('submission_file') && !$request->filled('submission_link')) {
             return response()->json([
                 'message' => 'Please upload either a file or a Google Docs Link.',
@@ -65,12 +66,16 @@ class UploadController extends Controller
                 'submitted_date' => Carbon::now(),
                 // 'status' => 'Completed',
             ]);
+            $type = "file";
+
         } else if ($request->has('submission_link')) {
             $task->update([
                 'submission' => $request->input('submission_link'),
                 'submitted_date' => Carbon::now(),
                 // 'status' => 'Completed',
             ]);
+            $type = "link";
+
         }
 
       
@@ -86,6 +91,12 @@ class UploadController extends Controller
             ->causedBy($user)
             ->withProperties(['role' => $request->input('role', 'member')])
             ->log($user->name . " uploaded a file");
+
+        Notification::create([
+            "team_id" => $team->id,
+            "type" => "upload",
+            "message" => $user->name . " uploaded a " . $type . " for " . $task->title
+        ]);
 
         // $upload->user_id = $request->user()->id;
         // $upload->task_id = $request->input('task_id');
@@ -144,7 +155,7 @@ class UploadController extends Controller
     {
         $file = $task->submission;
         if ($file && Storage::disk('public')->exists($file)) {
-        Storage::disk('public')->delete($file);
+            Storage::disk('public')->delete($file);
         }   
 
         $task->update([

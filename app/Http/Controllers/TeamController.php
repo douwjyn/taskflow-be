@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Auth;
 use Spatie\Activitylog\Models\Activity;
+use Illuminate\Support\Str;
 
 class TeamController extends Controller
 {
@@ -16,7 +17,7 @@ class TeamController extends Controller
     public function index(User $user)
     {
         // dd($user);
-        $teams = Team::with(['leader', 'members', 'tasks', 'tasks.users'])
+        $teams = Team::with(['leader', 'members.tasks', 'tasks', 'tasks.users'])
             ->where('leader_id', $user->id)
             ->orWhereHas('members', function ($query) use ($user) {
                 $query->where('users.id', $user->id);
@@ -37,17 +38,19 @@ class TeamController extends Controller
 
     public function join_team(Request $request) {
         $request->validate([
-            'team_name' => 'required|exists:teams,name',
+            'team_uuid' => 'required|exists:teams,uuid',
             'user_id' => 'required|exists:users,id',
             // 'role' => 'sometimes|string|in:member,admin,leader',
         ]);
 
-        $team = Team::where('name', $request->input('team_name'))->firstOrFail();
+        $team = Team::where('uuid', $request->input('team_uuid'))->firstOrFail();
         $user = User::findOrFail($request->input('user_id'));
 
         $team->members()->attach($user->id, [
             'role' => $request->input('role', 'member'), 
         ]);
+
+        
 
         // activity()
         //     ->performedOn($team)
@@ -78,11 +81,14 @@ class TeamController extends Controller
             'due_date' => 'required|date',
         ]);
 
+        $uuid = Str::random(5);
+
         // Create a new team
         $team = Team::create([
             'name' => $request->input('name'),
             'leader_id' => $request->input('leader_id'),
             'due_date' => $request->input('due_date'),
+            'uuid' => $uuid
         ]);
 
         // Return a response or redirect

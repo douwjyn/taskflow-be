@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('teams', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('uuid')->unique();
             $table->foreignId('leader_id')->constrained('users')->onDelete('cascade');
             $table->date('due_date')->nullable();
             $table->unsignedTinyInteger('progress')->default(0); // 0-100 percent

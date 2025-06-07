@@ -51,6 +51,7 @@ class TaskController extends Controller
             'due_date' => 'required|date',
             'team_id' => 'required|exists:teams,id',
         ]);
+        // $user = User::findOrfail($request->user_id);
 
         // Create the task
         $task = Task::create([
@@ -71,6 +72,12 @@ class TaskController extends Controller
 
     }
 
+    public function delete_all()
+    {
+        Task::truncate();
+        return response()->json(['message' => 'deleted all']);
+    }
+
     /**
      * Show the form for editing the specified resource.
      */
@@ -84,11 +91,15 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
-        
+        $request->validate([
+            'user_name' => 'required|exists:users,name',
+            'team_id' => 'required|exists:teams,id'
+        ]); 
         if ($task->status == 'Completed') {
             $task->update([
                 'status' => 'Pending'
             ]);
+            
             return response()->json(['message' => 'Task status updated to Incomplete.'], 200);
         }
 
@@ -97,6 +108,13 @@ class TaskController extends Controller
             'due_date' => null
         ]);
 
+        $assignee = $task->users->first();
+
+        \App\Models\Notification::create([
+            'team_id' => $request->team_id,
+            'type' => 'complete',
+            'message' => $assignee->name . " completed the task for " . $task->title
+        ]);
 
         return response()->json(['message' => 'Task updated successfully.'], 200);
     }
@@ -106,6 +124,6 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
-        //
+        
     }
 }

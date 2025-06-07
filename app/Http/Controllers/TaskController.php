@@ -59,11 +59,16 @@ class TaskController extends Controller
             'due_date' => $request->due_date,
             'team_id' => $request->team_id,
         ]);
-
         // Assign the user to the task
         $task->users()->attach($request->user_id);
-
-        return response()->json(['message' => 'Task assigned successfully.', 'team_id' => $task->team_id, 'team_name' => $task->team->name], 201);
+        $team = Team::findOrFail($request->team_id);
+        return response()->json([
+            'message' => 'Task assigned successfully.', 
+            'team_id' => $task->team_id,
+            'team_name' => $task->team->name,
+            'team' => $team->load('leader', 'members.tasks', 'tasks.users')
+            ]
+            , 201);
     }
 
     public function all(Task $task)

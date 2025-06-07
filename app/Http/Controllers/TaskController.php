@@ -71,6 +71,50 @@ class TaskController extends Controller
             , 201);
     }
 
+    public function pending_tasks(User $user) {
+        $pending_tasks = Task::with(['users', 'team']) // eager load
+            ->where('status', 'Pending')
+            ->whereHas('team', function ($q) use ($user) {
+                $q->where('leader_id', $user->id) // user is leader
+                ->orWhereHas('members', fn($q2) => $q2->where('users.id', $user->id)); // user is member
+            })
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'due_date' => $task->due_date,
+                    'team' => $task->team?->name ?? 'Unknown Team',
+                    'assignee' => $task->users->first()?->name ?? 'Unassigned',
+                    'status' => $task->status,
+                ];
+            });
+
+        return response()->json(['pending_tasks' => $pending_tasks]);
+    }
+
+     public function complete_tasks(User $user) {
+        $completed_tasks = Task::with(['users', 'team']) // eager load
+            ->where('status', 'Completed')
+            ->whereHas('team', function ($q) use ($user) {
+                $q->where('leader_id', $user->id) // user is leader
+                ->orWhereHas('members', fn($q2) => $q2->where('users.id', $user->id)); // user is member
+            })
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'due_date' => $task->due_date,
+                    'team' => $task->team?->name ?? 'Unknown Team',
+                    'assignee' => $task->users->first()?->name ?? 'Unassigned',
+                    'status' => $task->status,
+                ];
+            });
+
+        return response()->json(['completed_tasks' => $completed_tasks]);
+    }
+
     public function all(Task $task)
     {
         return response()->json(['tasks' => $task->get()]);

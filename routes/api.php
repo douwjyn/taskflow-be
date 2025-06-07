@@ -84,7 +84,8 @@ Route::post('/task-update/{task}', [App\Http\Controllers\TaskController::class, 
     ->name('task.update');
 Route::get('/tasks', [App\Http\Controllers\TaskController::class, 'all']);
 Route::get('/tasks-delete/all', [App\Http\Controllers\TaskController::class, 'delete_all']);
-
+Route::get('/tasks/pending/{user}', [App\Http\Controllers\TaskController::class, 'pending_tasks']);
+Route::get('/tasks/complete/{user}', [App\Http\Controllers\TaskController::class, 'complete_tasks']);
 
 
 // Upload routes

@@ -83,14 +83,14 @@ class TeamController extends Controller
             'leader_id' => 'required|exists:users,id',
             'due_date' => 'required|date',
         ]);
-
+        $dueDate = \Carbon\Carbon::parse($request->input('due_date'))->format('Y-m-d H:i:s');
         $uuid = Str::random(5);
 
         // Create a new team
         $team = Team::create([
             'name' => $request->input('name'),
             'leader_id' => $request->input('leader_id'),
-            'due_date' => $request->input('due_date'),
+            'due_date' => $dueDate,
             'uuid' => $uuid
         ]);
 

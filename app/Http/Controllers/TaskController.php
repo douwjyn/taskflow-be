@@ -52,12 +52,12 @@ class TaskController extends Controller
             'team_id' => 'required|exists:teams,id',
         ]);
         // $user = User::findOrfail($request->user_id);
-
+        $dueDate = \Carbon\Carbon::parse($request->input('due_date'))->format('Y-m-d H:i:s');
         // Create the task
         $task = Task::create([
             'title' => $request->title,
-            'due_date' => $request->due_date,
-            'original_due_date' => $request->due_date,
+            'due_date' => $dueDate,
+            'original_due_date' => $dueDate,
             'team_id' => $request->team_id,
         ]);
 
@@ -72,7 +72,7 @@ class TaskController extends Controller
             ->performedOn($team)
             ->causedBy($assignee)
             ->withProperties(['role' => $request->input('role', 'member')])
-            ->log($task->title . " due on " . \Carbon\Carbon::parse($task->due_date)->format('F j, Y'));
+            ->log($task->title . " due on " . \Carbon\Carbon::parse($dueDate)->format('F j, Y'));
             // ->log($task->title . ": " . $assigne->name . " uploaded a " . $type);
 
 

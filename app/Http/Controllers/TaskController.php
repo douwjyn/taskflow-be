@@ -57,11 +57,25 @@ class TaskController extends Controller
         $task = Task::create([
             'title' => $request->title,
             'due_date' => $request->due_date,
+            'original_due_date' => $request->due_date,
             'team_id' => $request->team_id,
         ]);
+
+
         // Assign the user to the task
         $task->users()->attach($request->user_id);
         $team = Team::findOrFail($request->team_id);
+
+        $assignee = $task->users->first();
+
+        activity()
+            ->performedOn($team)
+            ->causedBy($assignee)
+            ->withProperties(['role' => $request->input('role', 'member')])
+            ->log($task->title . " due on " . \Carbon\Carbon::parse($task->due_date)->format('F j, Y'));
+            // ->log($task->title . ": " . $assigne->name . " uploaded a " . $type);
+
+
         return response()->json([
             'message' => 'Task assigned successfully.', 
             'team_id' => $task->team_id,
@@ -106,6 +120,7 @@ class TaskController extends Controller
                     'id' => $task->id,
                     'title' => $task->title,
                     'due_date' => $task->due_date,
+                    'original_due_date' => $task->original_due_date,
                     'team' => $task->team?->name ?? 'Unknown Team',
                     'assignee' => $task->users->first()?->name ?? 'Unassigned',
                     'status' => $task->status,
@@ -146,18 +161,25 @@ class TaskController extends Controller
         ]); 
         if ($task->status == 'Completed') {
             $task->update([
-                'status' => 'Pending'
+                'status' => 'Pending',
+                'due_date' => $task->original_due_date
             ]);
             
             return response()->json(['message' => 'Task status updated to Incomplete.'], 200);
         }
-
+        $team = $task->team;
         $task->update([
             'status' => 'Completed',
             'due_date' => null
         ]);
 
         $assignee = $task->users->first();
+
+        // activity()
+        //     ->performedOn($team)
+        //     ->causedBy($assignee)
+        //     ->withProperties(['role' => $request->input('role', 'member')])
+        //     ->log($task->title . ": " . "Marked as completed by" . $assignee->name);
 
         \App\Models\Notification::create([
             'team_id' => $request->team_id,

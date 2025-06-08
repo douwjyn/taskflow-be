@@ -50,8 +50,11 @@ class TeamController extends Controller
             'role' => $request->input('role', 'member'), 
         ]);
 
-        
-
+        \App\Models\Notification::create([
+            "type" => "join",
+            "team_id" => $team->id,
+            "message" => $user->name . " has joined the team " . $team->name ,            
+        ]);
         // activity()
         //     ->performedOn($team)
         //     ->causedBy($user)

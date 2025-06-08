@@ -90,7 +90,7 @@ class UploadController extends Controller
             ->performedOn($team)
             ->causedBy($user)
             ->withProperties(['role' => $request->input('role', 'member')])
-            ->log($user->name . " uploaded a file");
+            ->log($task->title . ": " . $user->name . " uploaded a " . $type);
 
         Notification::create([
             "team_id" => $team->id,

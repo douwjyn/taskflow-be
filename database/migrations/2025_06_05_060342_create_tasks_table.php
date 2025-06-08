@@ -19,6 +19,7 @@ return new class extends Migration
             $table->enum('status', [ 'Pending', 'Completed'])->default('Pending');
             $table->date('due_date')->nullable();
             $table->string('submission')->nullable();
+            $table->date('original_due_date')->nullable();
             $table->date('submitted_date')->nullable();
             $table->timestamps();
         });
